@@ -22,7 +22,7 @@ public class Main {
             Admin.adminScreen();
         }
         else if(choice == 2){
-            // todo
+            Borrower.borrowerScreen();
         }
         else if(choice != 1 && choice != 2){
             // todo
