@@ -19,6 +19,7 @@ public class Admin {
     public static void adminScreen(){
         
         clearScr();
+        signIn();
         
         try{
             DbConnection c = new DbConnection();
@@ -30,7 +31,6 @@ public class Admin {
                 invalidSignIn();
             }
             else{
-                signIn();
                 clearScr();
                 validSignIn();
             }

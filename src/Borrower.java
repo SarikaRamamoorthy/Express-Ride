@@ -14,6 +14,7 @@ public class Borrower {
     static Scanner scanner = new Scanner(System.in);
     static String borrowerUserName;
     static String borrowerPassword;
+    static int borrowerID;
 
 
     public static void borrowerScreen(){
@@ -128,9 +129,10 @@ public class Borrower {
         borrowerPassword = scanner.next();
 
         try {
-            ResultSet signing = statement.executeQuery("select borrower_password from borrower_info where borrower_username = '"+borrowerUserName+"';");
+            ResultSet signing = statement.executeQuery("select borrower_password,borrower_id from borrower_info where borrower_username = '"+borrowerUserName+"';");
             if(signing.next()){
                 if(signing.getString(1).equals(borrowerPassword)){
+                    borrowerID = signing.getInt(2);
                     validSignIn();
                 }
                 else{
@@ -198,7 +200,7 @@ public class Borrower {
             System.out.println("    1. Vehicles list");
             System.out.println("    2. Select a vehicle");
             System.out.println("    3. Profile");
-            System.out.println("    4. Cart");
+            System.out.println("    4. View Cart");
             System.out.println("    5. Sign Out");
             System.out.println();
 
@@ -210,7 +212,7 @@ public class Borrower {
                 vehicleList();
             }
             else if(option == 2){
-                
+                selectVehicle();
             }
             else if(option == 3){
     
@@ -242,68 +244,122 @@ public class Borrower {
         int limitCounter = 0;
 
         while (limitCounter < 500) {
-
+            
+            Main.clearScr();
+            
+            System.out.println();
             System.out.println("    You can choose upto a car and a bike");
             System.out.println();
 
-            System.out.println("    Choose what would you like rent");
+            System.out.println("    Choose what would you like to rent");
             System.out.println();
 
             System.out.println("    1. Car");
             System.out.println("    2. Bike");
+            System.out.println("    3. Exit");
             System.out.println();
-            System.out.print("    Enter (1/2) : ");
+            System.out.print("    Enter (1/2/3) : ");
             int choice = scanner.nextInt();
-
-            if(choice == 1){
-
-                if(carRented){
-
-                    System.out.print("    You already had a car in your cart. Would you like to replace it ? (Yes/No) : ");
-
-                    String replace = scanner.nextLine();
-
-                    if(replace.equalsIgnoreCase("yes")){
-                        // replace car in cart
+            try {
+                ResultSet cartItems = statement.executeQuery("Select type_id from borrower_cart where borrower_id = "+borrowerID);
+                while(cartItems.next()){
+                    if(cartItems.getInt(1) == 1){
+                        carRented = true;
                     }
                     else{
-
+                        bikeRented = true;
                     }
+                }
+                
+            } catch (Exception e) {
+                // System.out.println(e);
+            }
+
+            if(choice == 1){
+                
+                System.out.println();
+                System.out.print("    Enter the vehicle ID : ");
+                int vehicleId = scanner.nextInt();
+                System.out.println();
+
+                if(carRented){
+                        
+                    System.out.print("    You already had a car in your cart.Press Enter.. ");
+                    scanner.nextLine();
+                    scanner.nextLine();
 
                 }
                 else{
 
-                    carRented = true;
-                    // insert into cart
+                    try {
+                        ResultSet isPresent = statement.executeQuery("select * from vehicles_info where vehicle_id = "+vehicleId+" and (isDeleted = 'N' and type_id = 1);");
+                        if(isPresent.next()){
+                            carRented = true;
+                            statement.execute("insert into borrower_cart values('"+borrowerID+"','"+vehicleId+"',null,1);");
+                            System.out.print("    Vehicle successfully moved to your Cart(Press Enter)..");
+                            scanner.nextLine();
+                            scanner.nextLine();
+                        }
+                        else{
+                            System.out.print("    Vehicle ID not found !! Press Enter..");
+                            scanner.nextLine();
+                            scanner.nextLine();
+                        }
+                    } catch (Exception e) {
+                        System.out.println(e);
+                    }
 
                 }
             }
             else if(choice == 2){
 
+                System.out.println();
+                System.out.print("    Enter the vehicle ID : ");
+                int vehicleId = scanner.nextInt();
+                System.out.println();
+
                 if(bikeRented){
 
-                    System.out.print("    You already had a bike in your cart. Would you like to replace it ? (Yes/No) : ");
-
-                    String replace = scanner.nextLine();
-
-                    if(replace.equalsIgnoreCase("yes")){
-                        // replace bike in cart
-                    }
-                    else{
-    
-                    }
+                    System.out.print("    You already had a bike in your cart.Press Enter.. ");
+                    scanner.nextLine();
+                    scanner.nextLine();
 
                 }
                 else{
 
-                    bikeRented = true;
-                    // insert into cart
+                    try {
+                        ResultSet isPresent = statement.executeQuery("select * from vehicles_info where vehicle_id = "+vehicleId+" and (isDeleted = 'N' and type_id = 2);");
+                        if(isPresent.next()){
+                            bikeRented = true;
+                            statement.execute("insert into borrower_cart values('"+borrowerID+"','"+vehicleId+"',null,2);");
+                            System.out.print("    Vehicle successfully moved to your Cart(Press Enter)..");
+                            scanner.nextLine();
+                            scanner.nextLine();
+                        }
+                        else{
+                            System.out.print("    Vehicle ID not found !! Press Enter..");
+                            scanner.nextLine();
+                            scanner.nextLine();
+                        }
+                    } catch (Exception e) {
+                        System.out.println(e);
+                    }
 
                 }
 
             }
+            else if(choice == 3){
+                Main.clearScr();
+                list();
+                
+            }
             else{
                 // for other options
+                System.out.println();
+                System.out.print("    Invalid Choice! Press Enter..");
+                scanner.nextLine();
+                scanner.nextLine();
+                limitCounter++;
             }
 
         }
