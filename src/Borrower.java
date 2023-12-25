@@ -1,6 +1,7 @@
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Borrower {
@@ -15,6 +16,9 @@ public class Borrower {
     static String borrowerUserName;
     static String borrowerPassword;
     static int borrowerID;
+    static int cautionDeposit = 30000;
+    static int rentAmount;
+    static int totalAmount;
 
 
     public static void borrowerScreen(){
@@ -204,7 +208,7 @@ public class Borrower {
             System.out.println("    5. Sign Out");
             System.out.println();
 
-            System.out.print("    Enter (1/2/3)  : ");
+            System.out.print("    Enter (1/2/3/4/5)  : ");
             int option = scanner.nextInt();
             System.out.println();
 
@@ -215,10 +219,10 @@ public class Borrower {
                 selectVehicle();
             }
             else if(option == 3){
-    
+                
             }
             else if(option == 4){
-    
+                viewCart();
             }
             else if(option == 5){
                 borrowerScreen();
@@ -236,6 +240,154 @@ public class Borrower {
 
         }
 
+    }
+
+    public static void viewCart() {
+        int limit = 0;
+        while(limit < 200){
+
+            Main.clearScr();            
+            cartDisplay();
+
+            System.out.println();
+            System.out.println("      CART");
+            System.out.println();
+
+            System.out.println("    1. Remove");
+            System.out.println("    2. Book");
+            System.out.println("    3. Exit");
+            System.out.println();
+            System.out.print("    Enter(1/2/3) : ");
+            int cartChoice = scanner.nextInt();
+            System.out.println();
+            if(cartChoice == 1){
+                Main.clearScr();
+                cartChoiceOne();
+            }
+            else if(cartChoice == 2){
+                Main.clearScr();
+                try {
+                    ArrayList<Integer> vehicleIdList = new ArrayList<>();
+                    ResultSet Deposit = statement.executeQuery("select borrower_deposit from borrower_info where borrower_id = "+borrowerID+";");
+                    if(Deposit.next()){
+                        int borrowerDeposit = Deposit.getInt(1);
+                        cautionDeposit = cautionDeposit - borrowerDeposit;
+                    }
+                    ResultSet vehicleId  = statement.executeQuery("select vehicle_id from borrower_cart where borrower_id = "+borrowerID+";");
+                    while(vehicleId.next()){
+                        vehicleIdList.add(vehicleId.getInt(1));
+                    }
+                    for(int i=0;i<vehicleIdList.size();i++){
+                        ResultSet rent  = statement.executeQuery("select rent from vehicles_info where vehicle_id = "+vehicleIdList.get(i)+";");
+                        if(rent.next())
+                            rentAmount += rent.getInt(1);
+                    }
+                    totalAmount = cautionDeposit+rentAmount;
+                    System.out.println("    Deposit to be paid : "+cautionDeposit);
+                    System.out.println();
+                    System.out.println("    Rent to be paid : "+rentAmount);
+                    System.out.println();
+                    System.out.println("    Total Amount to be paid : "+totalAmount);
+                    System.out.println();
+                    int limitcount = 0;
+                    while (limitcount < 200) {
+                        
+                        System.out.print("    Would you like to conform booking ? (Y/N): ");
+                        String conform = scanner.next().toLowerCase();
+                        System.out.println();
+                        if (conform.length() == 1) {
+                            if(conform.charAt(0) == 'y'){
+                                
+                            }
+                            else if(conform.charAt(0) == 'n'){
+                                System.out.println();
+                                System.out.print("    Booking Cancelled ! Press Enter");
+                                scanner.nextLine();
+                                scanner.nextLine();
+                                break;
+                            }
+                        } else {
+                            System.out.print("    Invalid ! Press Enter..");
+                            scanner.nextLine();
+                            scanner.nextLine();
+                            Main.clearLine(3);
+                            limitcount++;
+                        }
+                    }
+                    
+                    
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+            else if(cartChoice == 3){
+                Main.clearScr();
+                list();
+            }
+            else{
+                System.out.print("    Invalid Choice! Press Enter..");
+                scanner.nextLine();
+                scanner.nextLine();
+                limit++;
+            }
+
+        }
+    }
+
+    public static void cartChoiceOne(){
+        System.out.println();
+        System.out.print("    Enter the Vehicle ID to be removed : ");
+        int removeVehicleId = scanner.nextInt();
+        System.out.println();
+        try {
+            ResultSet isValid = statement.executeQuery("select * from borrower_cart where borrower_id = "+borrowerID+" and vehicle_id = "+removeVehicleId+";");
+            if (isValid.next()) {
+                statement.execute("delete from borrower_cart where vehicle_id = "+removeVehicleId);
+                System.out.println();
+                cartDisplay();
+                System.out.println();
+                System.out.print("    Vehicle removed from the cart. Press Enter..");
+                scanner.nextLine();
+                scanner.nextLine();
+            }
+            else{
+                System.out.println();
+                cartDisplay();
+                System.out.println();
+                System.out.print("    Invalid Vehicle ID! Press Enter..");
+                scanner.nextLine();
+                scanner.nextLine();
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public static void cartDisplay(){
+        try {
+            ResultSet cartItem = statement.executeQuery("select b.vehicle_id,v.vehicle_name,v.number_plate,t.type_name,v.Rent,t.Security_deposit from borrower_cart b inner join vehicles_info v on b.vehicle_id = v.vehicle_id inner join type_info t on b.type_id = t.type_id;");
+            if(!cartItem.next()){
+                System.out.println("    Cart Empty!");
+            }
+            else{
+                System.out.println("+------------+--------------------+--------------+------+------+------------------+");
+                System.out.println("| vehicle_id | vehicle_name       | number_plate | type | Rent | Security_deposit |");
+                System.out.println("+------------+--------------------+--------------+------+------+------------------+");
+                do {
+                    String id = String.format("%02d", cartItem.getInt(1));
+                    String vehicle_id = String.format("|%-12s|", " "+id);
+                    String vehicle_name = String.format("%-20s|"," "+cartItem.getString(2));
+                    String Number_plate = String.format("%-14s|"," "+cartItem.getString(3));
+                    String type_name = String.format("%-6s|"," "+cartItem.getString(4));
+                    String rent = String.format("%-6s|"," "+cartItem.getString(5));
+                    String security_deposit = String.format("%-18s|"," "+cartItem.getString(6));
+                    System.out.println(vehicle_id+""+vehicle_name+""+Number_plate+""+type_name+""+rent+""+security_deposit);
+                } while (cartItem.next());
+                System.out.println("+------------+--------------------+--------------+------+------+------------------+");
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 
     public static void selectVehicle(){
