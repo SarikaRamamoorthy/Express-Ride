@@ -8,27 +8,12 @@ public class Main {
     public static final String ANSI_LIGHTGREY = "\u001b[2m";
 
 
+    static Scanner scanner = new Scanner(System.in);
     public static void main(String[] args) throws Exception {
 
-        Scanner scanner = new Scanner(System.in);
         clearScr();
         decor();
         selectChoice();
-
-        int choice = scanner.nextInt();
-        System.out.println();
-        
-        if(choice == 1){
-            Admin.adminScreen();
-        }
-        else if(choice == 2){
-            Borrower.borrowerScreen();
-        }
-        else if(choice != 1 && choice != 2){
-            // todo
-        }
-
-        scanner.close();
 
 
     }
@@ -53,6 +38,18 @@ public class Main {
         System.out.println("    2. Renter");
         System.out.println();
         System.out.print("    Enter (1/2)  :  ");
+        int choice = scanner.nextInt();
+        System.out.println();
+        
+        if(choice == 1){
+            Admin.adminScreen();
+        }
+        else if(choice == 2){
+            Borrower.borrowerScreen();
+        }
+        else if(choice != 1 && choice != 2){
+            // todo
+        }
 
     }
 

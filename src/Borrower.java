@@ -19,6 +19,7 @@ public class Borrower {
     static int cautionDeposit = 30000;
     static int rentAmount;
     static int totalAmount;
+    static int securityAmount;
 
 
     public static void borrowerScreen(){
@@ -268,22 +269,29 @@ public class Borrower {
                 Main.clearScr();
                 try {
                     ArrayList<Integer> vehicleIdList = new ArrayList<>();
+                    ArrayList<Integer> typeIdList = new ArrayList<>();
                     ResultSet Deposit = statement.executeQuery("select borrower_deposit from borrower_info where borrower_id = "+borrowerID+";");
-                    if(Deposit.next()){
+                    if(Deposit.next()) {
                         int borrowerDeposit = Deposit.getInt(1);
                         cautionDeposit = cautionDeposit - borrowerDeposit;
                     }
-                    ResultSet vehicleId  = statement.executeQuery("select vehicle_id from borrower_cart where borrower_id = "+borrowerID+";");
+                    ResultSet vehicleId  = statement.executeQuery("select vehicle_id,type_id from borrower_cart where borrower_id = "+borrowerID+";");
                     while(vehicleId.next()){
                         vehicleIdList.add(vehicleId.getInt(1));
+                        typeIdList.add(vehicleId.getInt(2));
                     }
                     for(int i=0;i<vehicleIdList.size();i++){
                         ResultSet rent  = statement.executeQuery("select rent from vehicles_info where vehicle_id = "+vehicleIdList.get(i)+";");
                         if(rent.next())
                             rentAmount += rent.getInt(1);
+                        ResultSet type  = statement.executeQuery("select security_deposit from type_info where type_id = "+typeIdList.get(i)+";");
+                        if(type.next())
+                            securityAmount += type.getInt(1);
                     }
-                    totalAmount = cautionDeposit+rentAmount;
-                    System.out.println("    Deposit to be paid : "+cautionDeposit);
+                    totalAmount = cautionDeposit+rentAmount+securityAmount;
+                    System.out.println("    Caution Deposit to be paid : "+cautionDeposit);
+                    System.out.println();
+                    System.out.println("    Security Deposit to be paid : "+securityAmount);
                     System.out.println();
                     System.out.println("    Rent to be paid : "+rentAmount);
                     System.out.println();
@@ -297,7 +305,10 @@ public class Borrower {
                         System.out.println();
                         if (conform.length() == 1) {
                             if(conform.charAt(0) == 'y'){
-                                
+                                Payment.addRecord(borrowerID,totalAmount,vehicleIdList);
+                                System.out.print("    Your Payment is being processed. Please wait..");
+                                scanner.nextLine();
+                                scanner.nextLine();
                             }
                             else if(conform.charAt(0) == 'n'){
                                 System.out.println();
