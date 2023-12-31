@@ -1,25 +1,42 @@
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Payment {
-    public static void addRecord(int borrowerId,int totalAmount,ArrayList<Integer> vehicleIdList){
+    static int paymentId;
+    static int typeId;
+    public static void addRecord(int borrowerId,int totalAmount,int vehicleId){
         DbConnection connnect = new DbConnection();
         Connection con = connnect.getConnection();
         try{
             Statement statement = con.createStatement();
-            statement.execute("insert into borrower_paymentdetails(borrower_id,payment_status,amount_pending) values ("+borrowerId+",'Processing',"+totalAmount+");");
-            ResultSet update = statement.executeQuery("select payment_id from borrower_paymentdetails where borrower_id = "+borrowerId+";");
-            int payment_id = -1;
-            if(update.next()){
-                payment_id = update.getInt(1);
+            statement.execute("insert into borrower_paymentdetails(vehicle_id,borrower_id,amount_pending) values ("+vehicleId+","+borrowerId+","+totalAmount+");");
+            if(vehicleId != -1){
+
+                statement.execute("insert into rented_vehicles (vehicle_id,borrower_id) values("+vehicleId+","+borrowerId+");");
+
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                String today = sdf.format(new Date());
+                String tommorrow = sdf.format(new Date(System.currentTimeMillis() + 86400000));
+
+                String query = "update vehicles_info set borrower_id = "+borrowerId+" , Rented_date = '"+today+"', Return_date = '"+tommorrow+"' where vehicle_id = "+vehicleId+";";
+
+                statement.execute(query);
+
+                ResultSet payment = statement.executeQuery("select payment_id from borrower_paymentdetails where vehicle_id = "+vehicleId);
+                
+                if(payment.next()){
+                    paymentId = payment.getInt(1);
+                }
+                ResultSet type = statement.executeQuery("select type_id from vehicles_info where vehicle_id = "+vehicleId);
+                if(type.next()){
+                    typeId = type.getInt(1);
+                }
+                statement.execute("update borrower_cart set payment_id = "+paymentId+";");
             }
-            statement.execute("update borrower_cart set payment_Id = "+payment_id+";");
-            for(int i=0;i<vehicleIdList.size();i++){
-                statement.execute("insert into rented_vehicles(vehicle_id,borrower_id) values("+vehicleIdList.get(i)+","+borrowerId+";)");
-                statement.execute("update vehicles_info set borrower_id = "+borrowerId+" where vehicles_id = "+vehicleIdList.get(i));
-            }
+            
         }
         catch(Exception e){
             System.out.println(e);

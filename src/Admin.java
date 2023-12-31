@@ -171,8 +171,9 @@ public class Admin {
             System.out.println("    8.  Return Date");
             System.out.println("    9.  Rent");
             System.out.println("    10. Security Deposit");
+            System.out.println("    11. Payment Details");
             System.out.println();
-            System.out.print("    Choose any One(1 to 9) : ");
+            System.out.print("    Choose any One(1 to 11) : ");
             int property = sc.nextInt();
             clearScr();
             if(property >= 1 && property <= 9){
@@ -284,25 +285,85 @@ public class Admin {
                     System.out.println(e);
                 }
             }
-            else if(property == 10){
+            else if(property >= 10 && property <= 11){
                 try {
-
-                    sc.nextLine();
-                    System.out.println("    Select the vehicle type : ");
-                    System.out.println();
-                    System.out.println("    1. Car");
-                    System.out.println("    2. Bike");
-                    System.out.println();
-                    System.out.print("    Enter (1/2) : ");
-                    int typeId = sc.nextInt();
-                    System.out.println();
-                    System.out.print("    Enter the updated security deposit amount : ");
-                    int updatedSecurityDeposit =  sc.nextInt();
-                    statement.executeUpdate("update type_info set security_deposit = "+updatedSecurityDeposit+" where type_id = "+typeId);
-                    System.out.println();
-                    System.out.println("    ✓ Security deposit Modified ✓ ");
-                    System.out.println();
-                    vehiclesList(sqlVehiclesList);
+                    if (property == 10) {
+                        sc.nextLine();
+                        System.out.println("    Select the vehicle type : ");
+                        System.out.println();
+                        System.out.println("    1. Car");
+                        System.out.println("    2. Bike");
+                        System.out.println();
+                        System.out.print("    Enter (1/2) : ");
+                        int typeId = sc.nextInt();
+                        System.out.println();
+                        System.out.print("    Enter the updated security deposit amount : ");
+                        int updatedSecurityDeposit =  sc.nextInt();
+                        statement.executeUpdate("update type_info set security_deposit = "+updatedSecurityDeposit+" where type_id = "+typeId);
+                        System.out.println();
+                        System.out.println("    ✓ Security deposit Modified ✓ ");
+                        System.out.println();
+                        vehiclesList(sqlVehiclesList);
+                    }
+                    else if(property == 11){
+                        
+                        ResultSet result = statement.executeQuery("select * from borrower_paymentdetails");
+                        if(!result.next()){
+                            System.out.println("    Empty Payment Details !!");
+                        }
+                        else{
+                            System.out.println();
+                            System.out.println("    -1 in vehicleID represents the Caution Deposit");
+                            System.out.println();
+                            System.out.println("+------------+------------+-------------+----------------+-------------+----------------+");
+                            System.out.println("| Payment Id | Vehicle Id | Borrower Id | Payment Status | Amount Paid | amount Pending |");
+                            System.out.println("+------------+------------+-------------+----------------+-------------+----------------+");
+                            do {
+                                String paymentId = String.format("%02d", result.getInt(1));
+                                String payment_id = String.format("|%-12s", " "+paymentId);
+                                String vehicleId = String.format("%02d", result.getInt(2));
+                                String vehicle_id = String.format("|%-12s", " "+vehicleId);
+                                String borrowerId = String.format("%02d", result.getInt(3));
+                                String borrower_id = String.format("|%-13s", " "+borrowerId);
+                                String paymentStatus = String.format("|%-16s", " "+result.getString(4));
+                                String PaidAmount = String.format("%06d", result.getInt(5));
+                                String Paid_Amount = String.format("|%-13s", " "+PaidAmount);
+                                String PendingAmount = String.format("%06d", result.getInt(6));
+                                String Pending_Amount = String.format("|%-16s|", " "+PendingAmount);
+                                System.out.println(payment_id+""+vehicle_id+""+borrower_id+""+paymentStatus+""+Paid_Amount+""+Pending_Amount);
+                            } while (result.next());
+                            System.out.println("+------------+------------+-------------+----------------+-------------+----------------+");
+                            System.out.println();
+                            System.out.print("    Would you like to continue processing (Yes/No) ? ");
+                            sc.nextLine();
+                            String proceed = sc.nextLine();
+                            System.out.println();
+                            if(proceed.equalsIgnoreCase("yes")) {
+                                clearScr();
+                                System.out.println();
+                                System.out.print("    Enter the borrower ID : ");
+                                int borrowerid = sc.nextInt();
+                                System.out.println();
+                                ResultSet isPresent = statement.executeQuery("select pending_amount from borrower_paymentdetails where borrowerId = "+borrowerid +" and pending_amount > 0");
+                                boolean flag = true;
+                                while(isPresent.next()){
+                                    statement.execute("update borrower_paymentdetails set paid_status = true, paid_amount = "+isPresent.getInt(1)+" , pending_amount = 0;");
+                                    // TODO:
+                                    flag = false;
+                                }
+                                if(flag){
+                                    System.out.println("    Borrower ID not found !!");
+                                }
+                            }
+                            else if(proceed.equalsIgnoreCase("no")) {
+                                System.out.println("    Processing cancelled..");
+                            }
+                            else {
+                                System.out.println("    Invalid !! Press Enter.. ");
+                                sc.nextLine();
+                            }
+                        }
+                    }
 
                 } catch (Exception e) {
                     System.out.println(e);
@@ -382,7 +443,7 @@ public class Admin {
             }
             else{
                 System.out.println("+------------+------------------------+--------------+-----------+------------------+------+----------------+----------+-------------+-------------+-------------+");
-                System.out.println("| vehicle_id |    vehicle_name        | Number_plate | type_name | security_deposit | rent | total_distance | serviced | borrower_id | rented_date | return_date |");
+                System.out.println("| Vehicle Id |    Vehicle Name        | Number Plate | Type Name | Security Deposit | Rent | Total Distance | Serviced | Borrower Id | Rented Date | Return Date |");
                 System.out.println("+------------+------------------------+--------------+-----------+------------------+------+----------------+----------+-------------+-------------+-------------+");
                 do {
                     String id = String.format("%02d", result.getInt(1));
@@ -444,6 +505,10 @@ public class Admin {
             mainMenu();
         }
     }
+
+    // public static void paymentDetails {
+
+    // }
 
     public static void clearScr(){
 

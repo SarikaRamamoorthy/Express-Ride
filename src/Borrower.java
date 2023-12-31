@@ -17,9 +17,13 @@ public class Borrower {
     static String borrowerPassword;
     static int borrowerID;
     static int cautionDeposit = 30000;
-    static int rentAmount;
+    static int carId;
+    static int bikeId;
+    static int bikeRent;
+    static int carRent;
+    static int bikeSecurity;
+    static int carSecurity;
     static int totalAmount;
-    static int securityAmount;
 
 
     public static void borrowerScreen(){
@@ -282,30 +286,55 @@ public class Borrower {
                     }
                     for(int i=0;i<vehicleIdList.size();i++){
                         ResultSet rent  = statement.executeQuery("select rent from vehicles_info where vehicle_id = "+vehicleIdList.get(i)+";");
-                        if(rent.next())
-                            rentAmount += rent.getInt(1);
+                        if(rent.next()){
+                            if(typeIdList.get(i) == 1){
+                                carId = vehicleIdList.get(i);
+                                carRent = rent.getInt(1);
+                            }
+                            else {
+                                bikeId = vehicleIdList.get(i);
+                                bikeRent = rent.getInt(1);       
+                            }
+                        }
                         ResultSet type  = statement.executeQuery("select security_deposit from type_info where type_id = "+typeIdList.get(i)+";");
-                        if(type.next())
-                            securityAmount += type.getInt(1);
+                        if(type.next()){
+                            if(typeIdList.get(i) == 1)
+                                carSecurity = type.getInt(1);
+                            else
+                                bikeSecurity = type.getInt(1);
+                        }
                     }
-                    totalAmount = cautionDeposit+rentAmount+securityAmount;
-                    System.out.println("    Caution Deposit to be paid : "+cautionDeposit);
-                    System.out.println();
-                    System.out.println("    Security Deposit to be paid : "+securityAmount);
-                    System.out.println();
-                    System.out.println("    Rent to be paid : "+rentAmount);
-                    System.out.println();
-                    System.out.println("    Total Amount to be paid : "+totalAmount);
+                    totalAmount = cautionDeposit+bikeRent+bikeSecurity+carRent+carSecurity;
+                    System.out.println("    Caution Deposit to be paid        :   "+cautionDeposit);
+                    if(bikeRent > 0){
+                        System.out.println();
+                        System.out.println("    Bike Rent to be paid              :   "+bikeRent);
+                        System.out.println();
+                        System.out.println("    Bike Security Deposit to be paid  :   "+bikeSecurity);
+                    }
+                    if(carRent > 0){
+                        System.out.println();
+                        System.out.println("    Car Rent to be paid               :   "+carRent);
+                        System.out.println();
+                        System.out.println("    Car Security Deposit to be paid   :   "+carSecurity);
+                    }
+                    System.out.println("                                          --------------");
+                    System.out.println("    Total Amount to be paid           :   "+totalAmount);
                     System.out.println();
                     int limitcount = 0;
                     while (limitcount < 200) {
                         
+                        System.out.println();
                         System.out.print("    Would you like to conform booking ? (Y/N): ");
                         String conform = scanner.next().toLowerCase();
                         System.out.println();
                         if (conform.length() == 1) {
                             if(conform.charAt(0) == 'y'){
-                                Payment.addRecord(borrowerID,totalAmount,vehicleIdList);
+                                    Payment.addRecord(borrowerID,cautionDeposit,-1);
+                                if(carRent > 0)
+                                    Payment.addRecord(borrowerID,carRent+carSecurity,carId);
+                                if(bikeRent > 0)
+                                    Payment.addRecord(borrowerID,bikeRent+bikeSecurity,bikeId);
                                 System.out.print("    Your Payment is being processed. Please wait..");
                                 scanner.nextLine();
                                 scanner.nextLine();
@@ -321,7 +350,7 @@ public class Borrower {
                             System.out.print("    Invalid ! Press Enter..");
                             scanner.nextLine();
                             scanner.nextLine();
-                            Main.clearLine(3);
+                            Main.clearLine(4);
                             limitcount++;
                         }
                     }
@@ -455,7 +484,7 @@ public class Borrower {
                 else{
 
                     try {
-                        ResultSet isPresent = statement.executeQuery("select * from vehicles_info where vehicle_id = "+vehicleId+" and (isDeleted = 'N' and type_id = 1);");
+                        ResultSet isPresent = statement.executeQuery("select * from vehicles_info where vehicle_id = "+vehicleId+" and ((isDeleted = 'N' and type_id = 1) and (serviced = 'Yes' and borrower_id is null));");
                         if(isPresent.next()){
                             carRented = true;
                             statement.execute("insert into borrower_cart values('"+borrowerID+"','"+vehicleId+"',null,1);");
@@ -491,7 +520,7 @@ public class Borrower {
                 else{
 
                     try {
-                        ResultSet isPresent = statement.executeQuery("select * from vehicles_info where vehicle_id = "+vehicleId+" and (isDeleted = 'N' and type_id = 2);");
+                        ResultSet isPresent = statement.executeQuery("select * from vehicles_info where vehicle_id = "+vehicleId+" and ((isDeleted = 'N' and type_id = 2) and (serviced = 'Yes' and borrower_id is null));");
                         if(isPresent.next()){
                             bikeRented = true;
                             statement.execute("insert into borrower_cart values('"+borrowerID+"','"+vehicleId+"',null,2);");
