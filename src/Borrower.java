@@ -24,7 +24,10 @@ public class Borrower {
     static int bikeSecurity;
     static int carSecurity;
     static int totalAmount;
-
+    static int process = 0;
+    // not paid    0
+    // processing  1
+    // paid        2
 
     public static void borrowerScreen(){
         Main.clearScr();
@@ -258,120 +261,194 @@ public class Borrower {
             System.out.println("      CART");
             System.out.println();
 
-            System.out.println("    1. Remove");
-            System.out.println("    2. Book");
-            System.out.println("    3. Exit");
-            System.out.println();
-            System.out.print("    Enter(1/2/3) : ");
-            int cartChoice = scanner.nextInt();
-            System.out.println();
-            if(cartChoice == 1){
-                Main.clearScr();
-                cartChoiceOne();
-            }
-            else if(cartChoice == 2){
-                Main.clearScr();
-                try {
-                    ArrayList<Integer> vehicleIdList = new ArrayList<>();
-                    ArrayList<Integer> typeIdList = new ArrayList<>();
-                    ResultSet Deposit = statement.executeQuery("select borrower_deposit from borrower_info where borrower_id = "+borrowerID+";");
-                    if(Deposit.next()) {
-                        int borrowerDeposit = Deposit.getInt(1);
-                        cautionDeposit = cautionDeposit - borrowerDeposit;
-                    }
-                    ResultSet vehicleId  = statement.executeQuery("select vehicle_id,type_id from borrower_cart where borrower_id = "+borrowerID+";");
-                    while(vehicleId.next()){
-                        vehicleIdList.add(vehicleId.getInt(1));
-                        typeIdList.add(vehicleId.getInt(2));
-                    }
-                    for(int i=0;i<vehicleIdList.size();i++){
-                        ResultSet rent  = statement.executeQuery("select rent from vehicles_info where vehicle_id = "+vehicleIdList.get(i)+";");
-                        if(rent.next()){
-                            if(typeIdList.get(i) == 1){
-                                carId = vehicleIdList.get(i);
-                                carRent = rent.getInt(1);
-                            }
-                            else {
-                                bikeId = vehicleIdList.get(i);
-                                bikeRent = rent.getInt(1);       
-                            }
-                        }
-                        ResultSet type  = statement.executeQuery("select security_deposit from type_info where type_id = "+typeIdList.get(i)+";");
-                        if(type.next()){
-                            if(typeIdList.get(i) == 1)
-                                carSecurity = type.getInt(1);
-                            else
-                                bikeSecurity = type.getInt(1);
-                        }
-                    }
-                    totalAmount = cautionDeposit+bikeRent+bikeSecurity+carRent+carSecurity;
-                    System.out.println("    Caution Deposit to be paid        :   "+cautionDeposit);
-                    if(bikeRent > 0){
-                        System.out.println();
-                        System.out.println("    Bike Rent to be paid              :   "+bikeRent);
-                        System.out.println();
-                        System.out.println("    Bike Security Deposit to be paid  :   "+bikeSecurity);
-                    }
-                    if(carRent > 0){
-                        System.out.println();
-                        System.out.println("    Car Rent to be paid               :   "+carRent);
-                        System.out.println();
-                        System.out.println("    Car Security Deposit to be paid   :   "+carSecurity);
-                    }
-                    System.out.println("                                          --------------");
-                    System.out.println("    Total Amount to be paid           :   "+totalAmount);
-                    System.out.println();
-                    int limitcount = 0;
-                    while (limitcount < 200) {
-                        
-                        System.out.println();
-                        System.out.print("    Would you like to conform booking ? (Y/N): ");
-                        String conform = scanner.next().toLowerCase();
-                        System.out.println();
-                        if (conform.length() == 1) {
-                            if(conform.charAt(0) == 'y'){
-                                    Payment.addRecord(borrowerID,cautionDeposit,-1);
-                                if(carRent > 0)
-                                    Payment.addRecord(borrowerID,carRent+carSecurity,carId);
-                                if(bikeRent > 0)
-                                    Payment.addRecord(borrowerID,bikeRent+bikeSecurity,bikeId);
-                                System.out.print("    Your Payment is being processed. Please wait..");
-                                scanner.nextLine();
-                                scanner.nextLine();
-                            }
-                            else if(conform.charAt(0) == 'n'){
-                                System.out.println();
-                                System.out.print("    Booking Cancelled ! Press Enter");
-                                scanner.nextLine();
-                                scanner.nextLine();
-                                break;
-                            }
-                        } else {
-                            System.out.print("    Invalid ! Press Enter..");
-                            scanner.nextLine();
-                            scanner.nextLine();
-                            Main.clearLine(4);
-                            limitcount++;
-                        }
-                    }
-                    
-                    
-                } catch (Exception e) {
-                    System.out.println(e);
+            process = processState();
+            if(process == 0){
+                System.out.println("    1. Remove");
+                System.out.println("    2. Book");
+                System.out.println("    3. Exit");
+                System.out.println();
+                System.out.print("    Enter(1/2/3) : ");
+                int cartChoice = scanner.nextInt();
+                System.out.println();
+                if(cartChoice == 1){
+                    Main.clearScr();
+                    cartChoiceOne();
                 }
+                else if(cartChoice == 2){
+                    Main.clearScr();
+                    try {
+                        ArrayList<Integer> vehicleIdList = new ArrayList<>();
+                        ArrayList<Integer> typeIdList = new ArrayList<>();
+                        ResultSet Deposit = statement.executeQuery("select borrower_deposit from borrower_info where borrower_id = "+borrowerID+";");
+                        if(Deposit.next()) {
+                            int borrowerDeposit = Deposit.getInt(1);
+                            cautionDeposit = cautionDeposit - borrowerDeposit;
+                        }
+                        ResultSet vehicleId  = statement.executeQuery("select vehicle_id,type_id from borrower_cart where borrower_id = "+borrowerID+";");
+                        while(vehicleId.next()){
+                            vehicleIdList.add(vehicleId.getInt(1));
+                            typeIdList.add(vehicleId.getInt(2));
+                        }
+                        for(int i=0;i<vehicleIdList.size();i++){
+                            ResultSet rent  = statement.executeQuery("select rent from vehicles_info where vehicle_id = "+vehicleIdList.get(i)+";");
+                            if(rent.next()){
+                                if(typeIdList.get(i) == 1){
+                                    carId = vehicleIdList.get(i);
+                                    carRent = rent.getInt(1);
+                                }
+                                else {
+                                    bikeId = vehicleIdList.get(i);
+                                    bikeRent = rent.getInt(1);       
+                                }
+                            }
+                            ResultSet type  = statement.executeQuery("select security_deposit from type_info where type_id = "+typeIdList.get(i)+";");
+                            if(type.next()){
+                                if(typeIdList.get(i) == 1)
+                                    carSecurity = type.getInt(1);
+                                else
+                                    bikeSecurity = type.getInt(1);
+                            }
+                        }
+                        totalAmount = cautionDeposit+bikeRent+bikeSecurity+carRent+carSecurity;
+                        System.out.println("    Caution Deposit to be paid        :   "+cautionDeposit);
+                        if(bikeRent > 0){
+                            System.out.println();
+                            System.out.println("    Bike Rent to be paid              :   "+bikeRent);
+                            System.out.println();
+                            System.out.println("    Bike Security Deposit to be paid  :   "+bikeSecurity);
+                        }
+                        if(carRent > 0){
+                            System.out.println();
+                            System.out.println("    Car Rent to be paid               :   "+carRent);
+                            System.out.println();
+                            System.out.println("    Car Security Deposit to be paid   :   "+carSecurity);
+                        }
+                        System.out.println("                                          --------------");
+                        System.out.println("    Total Amount to be paid           :   "+totalAmount);
+                        System.out.println();
+                        int limitcount = 0;
+                        while (limitcount < 200) {
+                            
+                            System.out.println();
+                            System.out.print("    Would you like to conform booking ? (Y/N): ");
+                            String conform = scanner.next().toLowerCase();
+                            System.out.println();
+                            if (conform.length() == 1) {
+                                if(conform.charAt(0) == 'y'){
+                                        Payment.addRecord(borrowerID,cautionDeposit,-1);
+                                    if(carRent > 0)
+                                        Payment.addRecord(borrowerID,carRent+carSecurity,carId);
+                                    if(bikeRent > 0)
+                                        Payment.addRecord(borrowerID,bikeRent+bikeSecurity,bikeId);
+                                    System.out.print("    Your Payment is being processed. Please wait..");
+                                    scanner.nextLine();
+                                    scanner.nextLine();
+                                }
+                                else if(conform.charAt(0) == 'n'){
+                                    System.out.println();
+                                    System.out.print("    Booking Cancelled ! Press Enter");
+                                    scanner.nextLine();
+                                    scanner.nextLine();
+                                    break;
+                                }
+                            } else {
+                                System.out.print("    Invalid ! Press Enter..");
+                                scanner.nextLine();
+                                scanner.nextLine();
+                                Main.clearLine(4);
+                                limitcount++;
+                            }
+                        }
+                        
+                        
+                    } catch (Exception e) {
+                        System.out.println(e);
+                    }
+                }
+                else if(cartChoice == 3){
+                    Main.clearScr();
+                    list();
+                }
+                else{
+                    System.out.print("    Invalid Choice! Press Enter..");
+                    scanner.nextLine();
+                    scanner.nextLine();
+                    limit++;
+                }
+
             }
-            else if(cartChoice == 3){
-                Main.clearScr();
-                list();
-            }
-            else{
-                System.out.print("    Invalid Choice! Press Enter..");
+            else if(process == 1){
+                System.out.print("    Your Payment is being processed. Please wait..");
                 scanner.nextLine();
                 scanner.nextLine();
-                limit++;
+            }
+            else if(process == 2){
+                System.out.println("    1. Return");
+                System.out.println("    2. Extend");
+                System.out.println("    3. Exit");
+                System.out.println();
+                System.out.print("    Enter(1/2/3) : ");
+                int cartChoice = scanner.nextInt();
+                System.out.println();
+                if(cartChoice == 1){
+                    Main.clearScr();
+                    /* rented_returned
+                     * rented = 0
+                     * returned/fine not yet calculated = 1
+                     * returned/fine also calculated = 2
+                     */
+                    try {
+                        statement.execute("update rented_vehicles set rented_returned = "+1+" where borrower_id = "+borrowerID);
+                        System.out.println("    Please wait ! Your fines are being calculated.."); // Admin
+                        // System.out.println(" fine amount calculation cash");// Borrower
+
+                        // System.out.println("after fine payment update rented_returned to 2");//Borrower
+                        // System.out.println("borrwer cart empty");
+                        // System.out.println("vehicles_info borrower_id and dates  = null");
+                        // System.out.println("payment details delete");
+
+                    } catch (Exception e) {
+                        System.out.println(e);
+                    }
+                }
+                else if(cartChoice == 2){
+                    Main.clearScr();
+                    // extend
+                }
+                else if(cartChoice == 3){
+                    Main.clearScr();
+                    list();
+                }
+                else{
+                    System.out.print("    Invalid Choice! Press Enter..");
+                    scanner.nextLine();
+                    scanner.nextLine();
+                    limit++;
+                }
             }
 
         }
+    }
+
+
+    public static int processState(){
+        try {
+            ResultSet res = statement.executeQuery("select payment_status from borrower_paymentdetails where borrower_id = "+borrowerID+";");
+            if(res.next()){
+                if(res.getInt(1) == 0){
+                    return 1;
+                }
+                else{
+                    return 2;
+                }
+            }
+            else{
+                return 0;
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return 0;
     }
 
     public static void cartChoiceOne(){

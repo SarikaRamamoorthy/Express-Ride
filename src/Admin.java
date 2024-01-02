@@ -1,6 +1,7 @@
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Admin {
@@ -92,9 +93,10 @@ public class Admin {
         System.out.println("    4. Modify vehicles");
         System.out.println("    5. Search by name");
         System.out.println("    6. Search by Number plate");
-        System.out.println("    7. Sign Out");
+        System.out.println("    7. Rented vehicles");
+        System.out.println("    8. Sign Out");
         System.out.println();
-        System.out.print("    Enter your choice(1/2/3/4/5/6/7) :  ");
+        System.out.print("    Enter your choice(1/2/3/4/5/6/7/8) :  ");
 
         int choice = sc.nextInt();
         System.out.println();
@@ -182,104 +184,118 @@ public class Admin {
                 int id = sc.nextInt();
                 System.out.println();
                 try {
-                    if(property == 1){
-                        sc.nextLine();
-                        System.out.print("    Enter the updated vehicle name : ");
-                        String updatedVehicleName = sc.nextLine();
-                        statement.executeUpdate("update vehicles_info set vehicle_name = '"+updatedVehicleName+"' where vehicle_id = "+id);
-                        System.out.println();
-                        System.out.println("    ✓ Vehicle Name Modified ✓ ");
-                        System.out.println();
-                        vehiclesList(sqlVehiclesList);
+                    ResultSet vehicle = statement.executeQuery("select * from vehicles_info where vehicle_id = "+id+";");
+                    boolean  flag = false;
+                    if(vehicle.next()){
+                        flag = true;
                     }
-                    else if(property == 2){
-                        sc.nextLine();
-                        System.out.print("    Enter the updated vehicle number plate : ");
-                        String updatedNumberPlate = sc.nextLine();
-                        statement.executeUpdate("update vehicles_info set number_plate = '"+updatedNumberPlate+"' where vehicle_id = "+id);
-                        System.out.println();
-                        System.out.println("    ✓ Vehicle Number Plate Modified ✓ ");
-                        System.out.println();
-                        vehiclesList(sqlVehiclesList);
-                    }
-                    else if(property == 3){
-                        sc.nextLine();
-                        System.out.print("    Enter the updated vehicle type(Car/Bike) : ");
-                        String updatedType = sc.nextLine();
-                        int updatedTypeId = updatedType.equalsIgnoreCase("car") ? 1:2;
-                        statement.executeUpdate("update vehicles_info set type_id = "+updatedTypeId+" where vehicle_id = "+id);
-                        System.out.println();
-                        System.out.println("    ✓ Vehicle Type Modified ✓ ");
-                        System.out.println();
-                        vehiclesList(sqlVehiclesList);
-                    }
-                    else if(property == 4){
-                        System.out.print("    Enter the distance travelled by the vehicle : ");
-                        int updatedDistance = sc.nextInt();
-                        statement.executeUpdate("update vehicles_info set total_distance = "+updatedDistance+" where vehicle_id = "+id);
-                        System.out.println();
-                        System.out.println("    ✓ Distance Travelled Modified ✓ ");
-                        System.out.println();
-                        vehiclesList(sqlVehiclesList);
-                    }
-                    else if(property == 5){
-                        sc.nextLine();
-                        System.out.print("    Enter whether the vehicle is serviced or not (Yes/No): ");
-                        String updatedService = sc.nextLine();
-                        statement.executeUpdate("update vehicles_info set serviced = '"+updatedService+"' where vehicle_id = "+id);
-                        System.out.println();
-                        System.out.println("    ✓ Service Status Modified ✓ ");
-                        System.out.println();
-                        vehiclesList(sqlVehiclesList);
-                    }
-                    else if(property == 6){
-                        System.out.print("    Enter the Borrower ID of the vehicle : ");
-                        int updatedBorrower = sc.nextInt();
-                        statement.executeUpdate("update vehicles_info set borrower_id = "+updatedBorrower+" where vehicle_id = "+id);
-                        System.out.println();
-                        System.out.println("    ✓ Borrower ID Modified ✓ ");
-                        System.out.println();
-                        vehiclesList(sqlVehiclesList);
-                    }
-                    else if(property == 7){
-                        sc.nextLine();
-                        System.out.print("    Enter the Date of rent of the vehicle : ");
-                        String updatedRentDate = sc.nextLine();
-                        if(updatedRentDate.equals("null")){
-                            statement.executeUpdate("update vehicles_info set rented_date = "+updatedRentDate+" where vehicle_id = "+id);
+                    if(flag){
+                        if(property == 1){
+                            sc.nextLine();
+                            System.out.print("    Enter the updated vehicle name : ");
+                            String updatedVehicleName = sc.nextLine();
+                            statement.executeUpdate("update vehicles_info set vehicle_name = '"+updatedVehicleName+"' where vehicle_id = "+id);
+                            System.out.println();
+                            System.out.println("    ✓ Vehicle Name Modified ✓ ");
+                            System.out.println();
+                            vehiclesList(sqlVehiclesList);
                         }
-                        else{
-                            statement.executeUpdate("update vehicles_info set rented_date = '"+updatedRentDate+"' where vehicle_id = "+id);
+                        else if(property == 2){
+                            sc.nextLine();
+                            System.out.print("    Enter the updated vehicle number plate : ");
+                            String updatedNumberPlate = sc.nextLine();
+                            statement.executeUpdate("update vehicles_info set number_plate = '"+updatedNumberPlate+"' where vehicle_id = "+id);
+                            System.out.println();
+                            System.out.println("    ✓ Vehicle Number Plate Modified ✓ ");
+                            System.out.println();
+                            vehiclesList(sqlVehiclesList);
                         }
-                        System.out.println();
-                        System.out.println("    ✓ Rent Date Modified ✓ ");
-                        System.out.println();
-                        vehiclesList(sqlVehiclesList);
+                        else if(property == 3){
+                            sc.nextLine();
+                            System.out.print("    Enter the updated vehicle type(Car/Bike) : ");
+                            String updatedType = sc.nextLine();
+                            int updatedTypeId = updatedType.equalsIgnoreCase("car") ? 1:2;
+                            statement.executeUpdate("update vehicles_info set type_id = "+updatedTypeId+" where vehicle_id = "+id);
+                            System.out.println();
+                            System.out.println("    ✓ Vehicle Type Modified ✓ ");
+                            System.out.println();
+                            vehiclesList(sqlVehiclesList);
+                        }
+                        else if(property == 4){
+                            System.out.print("    Enter the distance travelled by the vehicle : ");
+                            int updatedDistance = sc.nextInt();
+                            statement.executeUpdate("update vehicles_info set total_distance = "+updatedDistance+" where vehicle_id = "+id);
+                            System.out.println();
+                            System.out.println("    ✓ Distance Travelled Modified ✓ ");
+                            System.out.println();
+                            vehiclesList(sqlVehiclesList);
+                        }
+                        else if(property == 5){
+                            sc.nextLine();
+                            System.out.print("    Enter whether the vehicle is serviced or not (Yes/No): ");
+                            String updatedService = sc.nextLine();
+                            statement.executeUpdate("update vehicles_info set serviced = '"+updatedService+"' where vehicle_id = "+id);
+                            System.out.println();
+                            System.out.println("    ✓ Service Status Modified ✓ ");
+                            System.out.println();
+                            vehiclesList(sqlVehiclesList);
+                        }
+                        else if(property == 6){
+                            System.out.print("    Enter the Borrower ID of the vehicle : ");
+                            int updatedBorrower = sc.nextInt();
+                            statement.executeUpdate("update vehicles_info set borrower_id = "+updatedBorrower+" where vehicle_id = "+id);
+                            System.out.println();
+                            System.out.println("    ✓ Borrower ID Modified ✓ ");
+                            System.out.println();
+                            vehiclesList(sqlVehiclesList);
+                        }
+                        else if(property == 7){
+                            sc.nextLine();
+                            System.out.print("    Enter the Date of rent of the vehicle : ");
+                            String updatedRentDate = sc.nextLine();
+                            if(updatedRentDate.equals("null")){
+                                statement.executeUpdate("update vehicles_info set rented_date = "+updatedRentDate+" where vehicle_id = "+id);
+                            }
+                            else{
+                                statement.executeUpdate("update vehicles_info set rented_date = '"+updatedRentDate+"' where vehicle_id = "+id);
+                            }
+                            System.out.println();
+                            System.out.println("    ✓ Rent Date Modified ✓ ");
+                            System.out.println();
+                            vehiclesList(sqlVehiclesList);
+                        }
+                        else if(property == 8){
+                            sc.nextLine();
+                            System.out.print("    Enter the Date of return of the vehicle : ");
+                            String updatedReturnDate = sc.nextLine();
+                            if(updatedReturnDate.equals("null")){
+                                statement.executeUpdate("update vehicles_info set return_date = "+updatedReturnDate+" where vehicle_id = "+id);
+                            }
+                            else{
+                                statement.executeUpdate("update vehicles_info set return_date = '"+updatedReturnDate+"' where vehicle_id = "+id);
+                            }
+                            System.out.println();
+                            System.out.println("    ✓ Return Date Modified ✓ ");
+                            System.out.println();
+                            vehiclesList(sqlVehiclesList);
+                        }
+                        else if(property == 9){
+                            sc.nextLine();
+                            System.out.print("    Enter the rent of the vehicle : ");
+                            int updatedRent = sc.nextInt();
+                            statement.executeUpdate("update vehicles_info set rent = "+updatedRent+" where vehicle_id = "+id);
+                            System.out.println();
+                            System.out.println("    ✓ Vehivle Rent Modified ✓ ");
+                            System.out.println();
+                            vehiclesList(sqlVehiclesList);
+                        }
                     }
-                    else if(property == 8){
+                    else {
+                        System.out.print("    Vehicle ID not found !! Press Enter..");
                         sc.nextLine();
-                        System.out.print("    Enter the Date of return of the vehicle : ");
-                        String updatedReturnDate = sc.nextLine();
-                        if(updatedReturnDate.equals("null")){
-                            statement.executeUpdate("update vehicles_info set return_date = "+updatedReturnDate+" where vehicle_id = "+id);
-                        }
-                        else{
-                            statement.executeUpdate("update vehicles_info set return_date = '"+updatedReturnDate+"' where vehicle_id = "+id);
-                        }
-                        System.out.println();
-                        System.out.println("    ✓ Return Date Modified ✓ ");
-                        System.out.println();
-                        vehiclesList(sqlVehiclesList);
-                    }
-                    else if(property == 9){
                         sc.nextLine();
-                        System.out.print("    Enter the rent of the vehicle : ");
-                        int updatedRent = sc.nextInt();
-                        statement.executeUpdate("update vehicles_info set rent = "+updatedRent+" where vehicle_id = "+id);
                         System.out.println();
-                        System.out.println("    ✓ Vehivle Rent Modified ✓ ");
-                        System.out.println();
-                        vehiclesList(sqlVehiclesList);
+                        clearScr();
                     }
                 } catch (Exception e) {
                     System.out.println(e);
@@ -307,33 +323,7 @@ public class Admin {
                     }
                     else if(property == 11){
                         
-                        ResultSet result = statement.executeQuery("select * from borrower_paymentdetails");
-                        if(!result.next()){
-                            System.out.println("    Empty Payment Details !!");
-                        }
-                        else{
-                            System.out.println();
-                            System.out.println("    -1 in vehicleID represents the Caution Deposit");
-                            System.out.println();
-                            System.out.println("+------------+------------+-------------+----------------+-------------+----------------+");
-                            System.out.println("| Payment Id | Vehicle Id | Borrower Id | Payment Status | Amount Paid | amount Pending |");
-                            System.out.println("+------------+------------+-------------+----------------+-------------+----------------+");
-                            do {
-                                String paymentId = String.format("%02d", result.getInt(1));
-                                String payment_id = String.format("|%-12s", " "+paymentId);
-                                String vehicleId = String.format("%02d", result.getInt(2));
-                                String vehicle_id = String.format("|%-12s", " "+vehicleId);
-                                String borrowerId = String.format("%02d", result.getInt(3));
-                                String borrower_id = String.format("|%-13s", " "+borrowerId);
-                                String paymentStatus = String.format("|%-16s", " "+result.getString(4));
-                                String PaidAmount = String.format("%06d", result.getInt(5));
-                                String Paid_Amount = String.format("|%-13s", " "+PaidAmount);
-                                String PendingAmount = String.format("%06d", result.getInt(6));
-                                String Pending_Amount = String.format("|%-16s|", " "+PendingAmount);
-                                System.out.println(payment_id+""+vehicle_id+""+borrower_id+""+paymentStatus+""+Paid_Amount+""+Pending_Amount);
-                            } while (result.next());
-                            System.out.println("+------------+------------+-------------+----------------+-------------+----------------+");
-                            System.out.println();
+                        if(borrowerPayment()){
                             System.out.print("    Would you like to continue processing (Yes/No) ? ");
                             sc.nextLine();
                             String proceed = sc.nextLine();
@@ -344,23 +334,40 @@ public class Admin {
                                 System.out.print("    Enter the borrower ID : ");
                                 int borrowerid = sc.nextInt();
                                 System.out.println();
-                                ResultSet isPresent = statement.executeQuery("select pending_amount from borrower_paymentdetails where borrowerId = "+borrowerid +" and pending_amount > 0");
+                                ResultSet isPresent = statement.executeQuery("select payment_id,amount_pending from borrower_paymentdetails where borrower_id = "+borrowerid +" and amount_pending > 0;");
                                 boolean flag = true;
+                                ArrayList<Integer> amountPending = new ArrayList<Integer>();
+                                ArrayList<Integer> paymentId = new ArrayList<Integer>();
                                 while(isPresent.next()){
-                                    statement.execute("update borrower_paymentdetails set paid_status = true, paid_amount = "+isPresent.getInt(1)+" , pending_amount = 0;");
-                                    // TODO:
+                                    amountPending.add(isPresent.getInt(2));
+                                    paymentId.add(isPresent.getInt(1));
+                                    
                                     flag = false;
                                 }
                                 if(flag){
-                                    System.out.println("    Borrower ID not found !!");
+                                    System.out.print("    Borrower ID not found !! Press Enter..");
+                                    sc.nextLine();
+                                    sc.nextLine();
+                                    System.out.println();
+                                    clearScr();
+                                }
+                                else{
+                                    for(int i=0;i<amountPending.size();i++){
+                                        String query = "update borrower_paymentdetails set payment_status = true, amount_paid = "+amountPending.get(i)+" , amount_pending = 0 where payment_id = "+paymentId.get(i)+";";
+                                        statement.execute(query);
+                                    }
+                                    borrowerPayment();
                                 }
                             }
                             else if(proceed.equalsIgnoreCase("no")) {
-                                System.out.println("    Processing cancelled..");
+                                System.out.print("    Processing cancelled ! Press Enter..");
+                                sc.nextLine();
+                                clearScr();
                             }
                             else {
-                                System.out.println("    Invalid !! Press Enter.. ");
+                                System.out.print("    Invalid !! Press Enter.. ");
                                 sc.nextLine();
+                                clearScr();
                             }
                         }
                     }
@@ -394,7 +401,78 @@ public class Admin {
             String sqlSearchByNumberPlate = "select v.vehicle_id,v.vehicle_name,v.Number_plate,t.type_name,t.security_deposit,v.rent,v.total_distance,v.serviced,v.borrower_id,v.rented_date,v.return_date from vehicles_info v inner join type_info t on v.type_id = t.type_id where Number_plate = '"+vehicleNumberPlate+"' and isdeleted = 'N'";
             vehiclesList(sqlSearchByNumberPlate);
         }
-        else if(choice == 7){
+        else if(choice == 7) {
+            clearScr();
+            boolean flag = true;
+            System.out.println();
+            System.out.println("    Rented Vehicles");
+            while(flag){
+                System.out.println();
+                System.out.println("    1. View List");
+                System.out.println("    2. Calculate Fine");
+                System.out.println("    3. Exit");
+                System.out.println();
+                System.out.print("    Enter the choice(1/2/3) : ");
+                int choiceRent = sc.nextInt();
+                if(choiceRent == 1){
+                    clearScr();
+                    displayRentedVehicles();
+                }
+                else if(choiceRent == 2){
+                    clearScr();
+                    System.out.println();
+                    System.out.print("    Enter the vehicle ID : ");
+                    int vehicle_id = sc.nextInt();
+                    System.out.println();
+                    boolean mark = false;
+                    try {
+                        ResultSet set = statement.executeQuery("select * from rented_vehicles where vehicle_id = "+ vehicle_id);
+                        if(set.next()){
+                            mark = true;
+                        }
+    
+                    } catch (Exception e) {
+                        System.out.println(e);
+                    }
+                    if(mark) {
+                        System.out.println("    Enter the Damage Level ");
+                        System.out.println();
+                        System.out.println("    0 for no damage");
+                        System.out.println("    1 for low damage");
+                        System.out.println("    2 for medium damage");
+                        System.out.println("    3 for high damage");
+                        System.out.println();
+                        System.out.print("    Enter (0/1/2/3) : ");
+                        int dlevel = sc.nextInt();
+                        System.out.println();
+                        System.out.print("    Enter the distance travelled during the period of rent : ");
+                        int dtravelled = sc.nextInt();
+                        try {
+                            statement.execute("update rented_vehicles set damage_level = "+dlevel+" , travelled_distance = "+dtravelled+" , rented_returned = 2 where vehicle_id = "+vehicle_id+" and rented_returned = 1");
+                            displayRentedVehicles();
+                            System.out.println();
+                            System.out.println("    Successfully updated !! Press Enter..");
+                        } catch (Exception e) {
+                            System.out.println(e);
+                        }
+                        System.out.println();
+                    }
+                    else{
+                        System.out.print("    Vehicle not found !! Press Enter ");
+                        sc.nextLine();
+                        sc.nextLine();
+                        clearScr();
+                    }
+                }
+                else if(choiceRent == 3){
+                    clearScr();
+                    System.out.println();
+                    flag = false;
+                }
+
+            }
+        }
+        else if(choice == 8){
             System.out.print("    Signing out...(Press Enter)");
             sc.nextLine();
             sc.nextLine();
@@ -413,6 +491,30 @@ public class Admin {
         }
         System.out.println();
         return true;
+    }
+
+    public static void displayRentedVehicles(){
+        System.out.println();
+        System.out.println("+------------+-------------+--------------+--------------------+-----------+-----------------+");
+        System.out.println("| vehicle_id | borrower_id | damage_level | Travelled_distance | Extension | rented_returned |");
+        System.out.println("+------------+-------------+--------------+--------------------+-----------+-----------------+");
+        try {
+            ResultSet set = statement.executeQuery("select * from rented_vehicles");
+            while(set.next()){
+                String id = String.format("%02d", set.getInt(1));
+                String vehicle_id = String.format("|%-12s", " "+id);
+                String bid = String.format("%02d", set.getInt(2));
+                String borrower_id = String.format("|%-13s", " "+bid);
+                String damage = String.format("|%-14s", " "+set.getInt(3));
+                String distance = String.format("|%-20s", " "+set.getInt(4));
+                String extension = String.format("|%-11s", " "+set.getInt(5));
+                String returnReturned = String.format("|%-17s|", " "+set.getInt(6));
+                System.out.println(vehicle_id+""+borrower_id+""+damage+""+distance+""+extension+""+returnReturned);
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        System.out.println("+------------+-------------+--------------+--------------------+-----------+-----------------+");
     }
 
     public static void mainMenu(){
@@ -506,9 +608,44 @@ public class Admin {
         }
     }
 
-    // public static void paymentDetails {
-
-    // }
+    public static boolean borrowerPayment() {
+        try {
+            ResultSet result = statement.executeQuery("select * from borrower_paymentdetails");
+            if(!result.next()){
+                System.out.println("    Empty Payment Details !!");
+                return false;
+            }
+            else{
+                System.out.println();
+                System.out.println("    -1 in vehicleID represents the Caution Deposit");
+                System.out.println();
+                System.out.println("+------------+------------+-------------+----------------+-------------+----------------+");
+                System.out.println("| Payment Id | Vehicle Id | Borrower Id | Payment Status | Amount Paid | amount Pending |");
+                System.out.println("+------------+------------+-------------+----------------+-------------+----------------+");
+                do{
+                    String paymentId = String.format("%02d", result.getInt(1));
+                    String payment_id = String.format("|%-12s", " "+paymentId);
+                    String vehicleId = String.format("%02d", result.getInt(2));
+                    String vehicle_id = String.format("|%-12s", " "+vehicleId);
+                    String borrowerId = String.format("%02d", result.getInt(3));
+                    String borrower_id = String.format("|%-13s", " "+borrowerId);
+                    String paymentStatus = String.format("|%-16s", " "+result.getString(4));
+                    String PaidAmount = String.format("%-6s", result.getInt(5));
+                    String Paid_Amount = String.format("|%-13s", " "+PaidAmount);
+                    String PendingAmount = String.format("%-6s", result.getInt(6));
+                    String Pending_Amount = String.format("|%-16s|", " "+PendingAmount);
+                    System.out.println(payment_id+""+vehicle_id+""+borrower_id+""+paymentStatus+""+Paid_Amount+""+Pending_Amount);
+                } while (result.next());
+                System.out.println("+------------+------------+-------------+----------------+-------------+----------------+");
+                System.out.println();
+                return true;
+            }
+            
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return false;
+    }
 
     public static void clearScr(){
 
