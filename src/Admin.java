@@ -94,7 +94,8 @@ public class Admin {
         System.out.println("    5. Search by name");
         System.out.println("    6. Search by Number plate");
         System.out.println("    7. Rented vehicles");
-        System.out.println("    8. Sign Out");
+        System.out.println("    8. Unserviced vehicles");
+        System.out.println("    9. Sign Out");
         System.out.println();
         System.out.print("    Enter your choice(1/2/3/4/5/6/7/8) :  ");
 
@@ -251,7 +252,7 @@ public class Admin {
                         }
                         else if(property == 7){
                             sc.nextLine();
-                            System.out.print("    Enter the Date of rent of the vehicle : ");
+                            System.out.print("    Enter the Date of rent of the vehicle(yyyy-mm-dd) : ");
                             String updatedRentDate = sc.nextLine();
                             if(updatedRentDate.equals("null")){
                                 statement.executeUpdate("update vehicles_info set rented_date = "+updatedRentDate+" where vehicle_id = "+id);
@@ -419,6 +420,9 @@ public class Admin {
                     displayRentedVehicles();
                 }
                 else if(choiceRent == 2){
+                    // get rented_returned value for given vehicle id
+                    // if rented_returned = 0 => display vehicle not yet returned ipo
+                    // if rented_returned = 1 calculate fine ok
                     clearScr();
                     System.out.println();
                     System.out.print("    Enter the vehicle ID : ");
@@ -473,6 +477,60 @@ public class Admin {
             }
         }
         else if(choice == 8){
+            Main.clearScr();
+            try {
+                ResultSet uns = statement.executeQuery("select vehicle_id,vehicle_name,serviced from vehicles_info where serviced = 'No';");
+                if(!Borrower.displayTable(uns)){
+                    System.out.println();
+                    System.out.println("    list is empty :) ");
+                    System.out.println();
+                }
+                else{
+                    System.out.println();
+                    System.out.println("    Select your choice ");
+                    System.out.println("    1. Send vehicle to service");
+                    System.out.println("    2. Exit                    ");
+                    System.out.println();
+                    System.out.print("    Enter choice(1/2) : ");
+                    int select = sc.nextInt();
+                    if(select == 1){
+                        Main.clearScr();
+                        System.out.println();
+                        System.out.print("    Enter the vehicle ID to be serviced : ");
+                        int uns_vehicleId = sc.nextInt();
+                        System.out.println();
+                        ResultSet unser = statement.executeQuery("select * from vehicles_info where serviced = 'No' and vehicle_id = "+uns_vehicleId);
+                        if(unser.next()){
+                            String query = "update vehicles_info set Serviced = 'Yes' , total_distance = 0 where vehicle_id = "+uns_vehicleId;
+                            statement.execute(query);
+                            System.out.print("    Vehicle sent to Service (Press Enter) ");
+                            sc.nextLine();
+                            sc.nextLine();
+                            Main.clearScr();
+                            System.out.println();
+                        }
+                        else{
+                            System.out.println("    Invalid vehicle ID");
+                        }
+
+                    }
+                    else if(select == 2){
+                        Main.clearScr();
+                        System.out.println();
+                        choiceList();
+                    }
+                    else{
+                        System.out.print("    Invalid choice ! Press Enter ");
+                        sc.nextLine();
+                        sc.nextLine();
+                        System.out.println();
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println(e);
+            }
+        }
+        else if(choice == 9){
             System.out.print("    Signing out...(Press Enter)");
             sc.nextLine();
             sc.nextLine();

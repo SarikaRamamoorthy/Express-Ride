@@ -1,12 +1,17 @@
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+
+import com.jakewharton.fliptables.FlipTable;
 
 public class Borrower {
     /*variables used for decorations */
-    public static final String ANSI_RESET = "\u001B[0m"; 
+    public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_BOLD = "\u001b[5m";
     public static final String ANSI_LIGHTGREY = "\u001b[2m";
     public static final String ANSI_MAGENTA = "\u001b[36;1m";
@@ -180,8 +185,20 @@ public class Borrower {
         System.out.println(ANSI_RESET);
         decor();
         System.out.println();
+        try {
+            ResultSet set = statement.executeQuery("select vehicle_id from borrower_cart where type_id = 1");
+            if(set.next()){
+                carId = set.getInt(1);
+            }
+            ResultSet sets = statement.executeQuery("select vehicle_id from borrower_cart where type_id = 2");
+            if(sets.next()){
+                bikeId = sets.getInt(1);
+            }
+        }
+        catch(Exception e){
+            System.out.println(e);
+        }
         list();
-
     }
 
     public static void decor(){
@@ -227,13 +244,15 @@ public class Borrower {
                 selectVehicle();
             }
             else if(option == 3){
-                
+                profile();
             }
             else if(option == 4){
                 viewCart();
             }
             else if(option == 5){
-                borrowerScreen();
+                Main.clearScr();
+                Main.decor();
+                Main.selectChoice();
             }
             else{
                 System.out.println("    Invalid choice !!");
@@ -248,6 +267,32 @@ public class Borrower {
 
         }
 
+    }
+
+    public static void profile(){
+        Main.clearScr();
+        System.out.println();
+        try {
+            ResultSet user = statement.executeQuery("select borrower_name from borrower_info where borrower_id = "+borrowerID);
+            if(user.next()){
+                System.out.println("    Hello "+user.getString(1));
+            }
+            System.out.println();
+            System.out.println("    Your Rental History :D ");
+            System.out.println();
+            ResultSet history = statement.executeQuery("select r.vehicle_id,v.vehicle_name,t.type_name 'vehicle type' from rented_vehicles r inner join vehicles_info v on r.vehicle_id = v.vehicle_id inner join type_info t on t.type_id = v.type_id where r.borrower_id = "+borrowerID+" and r.rented_returned = 3;");
+            if(!displayTable(history)){
+                System.out.println("    History Empty :( ");
+            }
+            System.out.println();
+            System.out.print("    Press Enter to continue ");
+            scanner.nextLine();
+            scanner.nextLine();
+            System.out.println();
+            Main.clearScr();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 
     public static void viewCart() {
@@ -277,6 +322,15 @@ public class Borrower {
                 else if(cartChoice == 2){
                     Main.clearScr();
                     try {
+                        ResultSet existVehicle = statement.executeQuery("select * from borrower_cart where borrower_id = "+borrowerID+";");
+                        boolean exist = false;
+                        while(existVehicle.next()){
+                            exist = true;
+                        }
+                        if(!exist){
+                            System.out.println("    Cart Empty!!");
+                            break;
+                        }
                         ArrayList<Integer> vehicleIdList = new ArrayList<>();
                         ArrayList<Integer> typeIdList = new ArrayList<>();
                         ResultSet Deposit = statement.executeQuery("select borrower_deposit from borrower_info where borrower_id = "+borrowerID+";");
@@ -340,9 +394,10 @@ public class Borrower {
                                         Payment.addRecord(borrowerID,carRent+carSecurity,carId);
                                     if(bikeRent > 0)
                                         Payment.addRecord(borrowerID,bikeRent+bikeSecurity,bikeId);
-                                    System.out.print("    Your Payment is being processed. Please wait..");
-                                    scanner.nextLine();
-                                    scanner.nextLine();
+                                    // System.out.print("    Your Payment is being processed. Please wait..");
+                                    // scanner.nextLine();
+                                    // scanner.nextLine();
+                                    break;
                                 }
                                 else if(conform.charAt(0) == 'n'){
                                     System.out.println();
@@ -381,6 +436,8 @@ public class Borrower {
                 System.out.print("    Your Payment is being processed. Please wait..");
                 scanner.nextLine();
                 scanner.nextLine();
+                Main.clearScr();
+                break;
             }
             else if(process == 2){
                 System.out.println("    1. Return");
@@ -392,21 +449,121 @@ public class Borrower {
                 System.out.println();
                 if(cartChoice == 1){
                     Main.clearScr();
-                    /* rented_returned
-                     * rented = 0
-                     * returned/fine not yet calculated = 1
-                     * returned/fine also calculated = 2
-                     */
+                    System.out.println();
+                    System.out.print("    Enter the vehicle ID to returned : ");
+                    int rented_vehicleId = scanner.nextInt();
+                    System.out.println();
                     try {
-                        statement.execute("update rented_vehicles set rented_returned = "+1+" where borrower_id = "+borrowerID);
-                        System.out.println("    Please wait ! Your fines are being calculated.."); // Admin
-                        // System.out.println(" fine amount calculation cash");// Borrower
+                        String s = "select rented_returned from rented_vehicles where vehicle_id = "+rented_vehicleId+" and borrower_id = "+borrowerID+" and rented_returned != 3;";
+                        ResultSet exists = statement.executeQuery(s);
+                        if(exists.next()){
+                            int state = exists.getInt(1);
+                            if(state == 0){
+                                statement.execute("update rented_vehicles set rented_returned = 1 where vehicle_id = "+rented_vehicleId+";");
+                                System.out.println();
+                                System.out.print("    Please wait your fines are being Calculated !(Press Enter) : ");
+                                scanner.nextLine();
+                                scanner.nextLine();
+                                System.out.println();
+                            }
+                            else if(state == 1){
+                                Main.clearScr();
+                                System.out.println();
+                                System.out.print("    Please wait your fines are being Calculated !(Press Enter) : ");
+                                scanner.nextLine();
+                                scanner.nextLine();
+                                System.out.println();
+                            }
+                            else if(state == 2){
+                                Main.clearScr();
+                                ResultSet rent = statement.executeQuery("select rent,total_distance from vehicles_info where vehicle_id = "+rented_vehicleId);
+                                int rentAmount = 0;
+                                int totalDistance = 0;
+                                if(rent.next()){
+                                    rentAmount = rent.getInt(1);
+                                    totalDistance = rent.getInt(2);
+                                }
+                                ResultSet value = statement.executeQuery("select damage_level, travelled_distance from rented_vehicles where vehicle_id = "+rented_vehicleId+" and rented_returned = 2");
+                                int damageAmount = 0;
+                                int distanceAmount = 0;
+                                int distance = 0;
+                                if(value.next()){
+                                    if(value.getInt(1) == 1){
+                                        damageAmount = (int)(0.2*rentAmount);
+                                    }
+                                    else if(value.getInt(1) == 2){
+                                        damageAmount = (int)(0.5*rentAmount);
+                                    }
+                                    else if(value.getInt(1) == 3){
+                                        damageAmount = (int)(0.75*rentAmount);
+                                    }
+                                    if(value.getInt(2) > 500){
+                                        distance = value.getInt(2);
+                                        distanceAmount = (int)(0.15*rentAmount);
+                                    }
+                                }
+                                int extendAmount = 0;
+                                ResultSet extend = statement.executeQuery("select extension from rented_vehicles where vehicle_id = "+rented_vehicleId+" and borrower_id = "+borrowerID+" and rented_returned != 3");
+                                if(extend.next()){
+                                    extendAmount = (2-extend.getInt(1))*rentAmount;
+                                }
+                                int total = damageAmount+distanceAmount+extendAmount;
+                                if(total > 0){
+                                    Main.clearScr();
+                                    System.out.println();
+                                    System.out.println("    Extension Rent           : "+extendAmount);
+                                    System.out.println("    Fines due damage caused  : "+damageAmount);
+                                    System.out.println("    Fines due wear and tear  : "+distanceAmount);
+                                    System.out.println("                              --------------");
+                                    System.out.println("            Total Amount     : "+total);
+                                    System.out.println();
+                                    System.out.print("    Pay the fine Amount(Press Enter to pay)    :");
+                                    scanner.nextLine();
+                                    scanner.nextLine();
+                                    System.out.println();
+                                    System.out.println("    Payment Successful :)");
+                                }
+                                statement.execute("update vehicles_info set total_distance = "+(distance+totalDistance)+" where vehicle_id = "+rented_vehicleId);
+                                if(carId == rented_vehicleId){
+                                    if(distance+totalDistance >= 3000){
+                                        statement.execute("update vehicles_info set Serviced = 'No' where vehicle_id = "+rented_vehicleId+";");
+                                    }
+                                }
+                                else if(bikeId == rented_vehicleId){
+                                    if(distance+totalDistance >= 1500){
+                                        statement.execute("update vehicles_info set Serviced = 'No' where vehicle_id = "+rented_vehicleId+";");
+                                    }
+                                }
+                                statement.execute("delete from borrower_cart where vehicle_id = "+rented_vehicleId+" and borrower_id = "+borrowerID+";");
 
-                        // System.out.println("after fine payment update rented_returned to 2");//Borrower
-                        // System.out.println("borrwer cart empty");
-                        // System.out.println("vehicles_info borrower_id and dates  = null");
-                        // System.out.println("payment details delete");
+                                if(carId == rented_vehicleId){
+                                    statement.execute("delete from borrower_paymentdetails where borrower_id = "+borrowerID+" and vehicle_id = "+carId);
+                                    carId = 0;
+                                }
+                                if(bikeId == rented_vehicleId){
+                                    statement.execute("delete from borrower_paymentdetails where borrower_id = "+borrowerID+" and vehicle_id = "+bikeId);
+                                    bikeId = 0;
+                                }
+                                
+                                if(carId == 0 && bikeId == 0){
+                                    statement.execute("delete from borrower_paymentdetails where borrower_id = "+borrowerID+" and vehicle_id = -1");
+                                }
 
+                                
+                                statement.execute("Update rented_vehicles set rented_returned = "+3+" where borrower_id = "+borrowerID+" and vehicle_id = "+rented_vehicleId+";");
+                                statement.execute("update vehicles_info set return_date = null , rented_date = null, borrower_id = null where vehicle_id = "+rented_vehicleId+";");
+                                System.out.println();
+                                System.out.print("    Returned Successfully(Press Enter) ");
+                                scanner.nextLine();
+                                System.out.println();
+                                System.out.print("    Eagerly waiting to offer you a seamless experience on your upcoming journey :D");
+                                scanner.nextLine();
+                                
+                            }
+                        }
+                        else {
+                            System.out.println("    Invalid vehicle ID :(");
+                        }
                     } catch (Exception e) {
                         System.out.println(e);
                     }
@@ -414,6 +571,43 @@ public class Borrower {
                 else if(cartChoice == 2){
                     Main.clearScr();
                     // extend
+                    System.out.println();
+                    System.out.print("    Enter the vehicle ID for extension : ");
+                    int extendID = scanner.nextInt();
+                    try {
+                        ResultSet set = statement.executeQuery("select extension from rented_vehicles where vehicle_id = "+extendID+" and borrower_id = "+borrowerID+" and rented_returned != 3");
+                        if(set.next()){
+                            int extensionPeriod = set.getInt(1);
+                            if(extensionPeriod == 0){
+                                System.out.println();
+                                System.out.print("    Your Extension Period is over. Kindly return the vehicle.(Press Enter) ");
+                                scanner.nextLine();
+                                scanner.nextLine();
+                            }
+                            else{
+                                statement.execute("update rented_vehicles set extension = "+(extensionPeriod-1)+" where borrower_id = "+borrowerID+" and vehicle_id = "+extendID+" and rented_returned != 3");
+                                System.out.println();
+                                System.out.print("    Happy to extend your journey :D (Press Enter) ");
+                                scanner.nextLine();
+                                scanner.nextLine();
+                            }
+                        }
+                        else {
+                            System.out.println();
+                            System.out.print("    Invalid vehicle ID(Press Enter) : ");
+                            scanner.nextLine();
+                            scanner.nextLine();
+                        }
+                        
+                    } catch (Exception e) {
+                        System.out.println(e);
+                    }
+                    // Get the vehicle id to extend 
+                    // get the extension count for the vehicle
+                    // check if extension count is zero
+                    // if extension != 0
+                    // update the extend in rented_vehicles
+                    // force him to return vehicle
                 }
                 else if(cartChoice == 3){
                     Main.clearScr();
@@ -429,7 +623,6 @@ public class Borrower {
 
         }
     }
-
 
     public static int processState(){
         try {
@@ -636,8 +829,6 @@ public class Borrower {
 
     }
 
-
-
     public static void vehicleList(){
 
         Main.clearScr();
@@ -645,6 +836,8 @@ public class Borrower {
         try {
 
             ResultSet set = statement.executeQuery("select v.vehicle_id,v.vehicle_name,v.Number_plate,t.type_name,t.security_deposit,v.rent from vehicles_info v inner join type_info t on v.type_id = t.type_id where v.isdeleted = 'N' and (v.rented_date is null and serviced = 'Yes') order by v.vehicle_id;");
+
+            displayTable(set);
 
             System.out.println("+------------+------------------------+--------------+-----------+------------------+------+");
 
@@ -676,8 +869,49 @@ public class Borrower {
 
     }
 
+    public static boolean displayTable(ResultSet resultSet) throws SQLException{
+
+        if (resultSet == null) {
+            System.out.println("resultSet == null");
+            return false;
+        }
+        if (!resultSet.isBeforeFirst()) {
+            // System.out.println("Result set not at first.");
+            return false;
+        }
+
+        List<String> headers = new ArrayList<>();
+        ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+
+        int columnCount = resultSetMetaData.getColumnCount();
+        for (int column = 0; column < columnCount; column++) {
+            headers.add(resultSetMetaData.getColumnName(column + 1));
+        }
+
+        List<String[]> data = new ArrayList<>();
+        while (resultSet.next()) {
+            String[] rowData = new String[columnCount];
+            for (int column = 0; column < columnCount; column++) {
+                String dataRow = resultSet.getString(column + 1);
+                if(dataRow == null){
+                    dataRow = " ";
+                }
+                rowData[column] = dataRow;
+            }
+            data.add(rowData);
+        }
+
+        String[] headerArray = headers.toArray(new String[headers.size()]);
+        String[][] dataArray = data.toArray(new String[data.size()][]);
+
+        System.out.println(FlipTable.of(headerArray, dataArray));
+
+        return true;
+    }
+
 }
 /*column name
+ *  cursor
  *  Borrower_id
  *  Borrower_name
  *  Borrower_userName
