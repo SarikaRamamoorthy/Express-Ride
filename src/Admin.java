@@ -523,7 +523,7 @@ public class Admin {
                             System.out.println();
                             boolean mark = false;
                             try {
-                                ResultSet set = statement.executeQuery("select * from rented_vehicles where vehicle_id = "+vehicle_id+" and rented_returned != 3");
+                                ResultSet set = statement.executeQuery("select * from rented_vehicles where vehicle_id = "+vehicle_id+" and rented_returned = 1");
                                 if(set.next()){
                                     mark = true;
                                 }

@@ -575,7 +575,7 @@ public class Borrower {
                     System.out.print("    Enter the vehicle ID for extension : ");
                     int extendID = scanner.nextInt();
                     try {
-                        ResultSet set = statement.executeQuery("select extension from rented_vehicles where vehicle_id = "+extendID+" and borrower_id = "+borrowerID+" and rented_returned != 3");
+                        ResultSet set = statement.executeQuery("select extension from rented_vehicles where vehicle_id = "+extendID+" and borrower_id = "+borrowerID+" and rented_returned = 0");
                         if(set.next()){
                             int extensionPeriod = set.getInt(1);
                             if(extensionPeriod == 0){
@@ -585,7 +585,7 @@ public class Borrower {
                                 scanner.nextLine();
                             }
                             else{
-                                statement.execute("update rented_vehicles set extension = "+(extensionPeriod-1)+" where borrower_id = "+borrowerID+" and vehicle_id = "+extendID+" and rented_returned != 3");
+                                statement.execute("update rented_vehicles set extension = "+(extensionPeriod-1)+" where borrower_id = "+borrowerID+" and vehicle_id = "+extendID+" and rented_returned = 0");
                                 System.out.println();
                                 System.out.print("    Happy to extend your journey :D (Press Enter) ");
                                 scanner.nextLine();
