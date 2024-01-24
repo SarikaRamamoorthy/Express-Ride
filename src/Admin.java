@@ -91,8 +91,8 @@ public class Admin {
         System.out.println("    2. Add vehicles");
         System.out.println("    3. Remove vehicles");
         System.out.println("    4. Modify vehicles");
-        System.out.println("    5. Search by name");
-        System.out.println("    6. Search by Number plate");
+        System.out.println("    5. Search a vehicle");
+        System.out.println("    6. View vehicles details sorted by rent");
         System.out.println("    7. Rented vehicles");
         System.out.println("    8. Unserviced vehicles");
         System.out.println("    9. Sign Out");
@@ -383,95 +383,224 @@ public class Admin {
             }
         }
         else if(choice == 5){
+
             clearScr();
             System.out.println();
-            System.out.print("    Enter the Name of the Vehicle to search : ");
-            sc.nextLine();//empty
-            String vehicleName = sc.nextLine();
+            System.out.println("    Select your choice");
             System.out.println();
-            String sqlSearchByName = "select v.vehicle_id,v.vehicle_name,v.Number_plate,t.type_name,t.security_deposit,v.rent,v.total_distance,v.serviced,v.borrower_id,v.rented_date,v.return_date from vehicles_info v inner join type_info t on v.type_id = t.type_id where vehicle_name = '"+vehicleName+"' and isdeleted = 'N' order by v.vehicle_id";
-            vehiclesList(sqlSearchByName);
+            System.out.println("    1. Car ");
+            System.out.println("    2. Bike ");
+            System.out.println();
+            System.out.print("    Enter your choice(1/2) : ");
+            int type = sc.nextInt();
+            if(type == 1 || type == 2){
+                clearScr();
+                System.out.println();
+                System.out.println("    Select your choice");
+                System.out.println();
+                System.out.println("    1. Search by vehicle name ");
+                System.out.println("    2. Search by vehicle number plate ");
+                System.out.println();
+                System.out.print("    Enter your choice(1/2) : ");
+                int select = sc.nextInt();
+                if(select == 1){
+    
+                    clearScr();
+                    System.out.println();
+                    System.out.print("    Enter the Name of the Vehicle to search : ");
+                    sc.nextLine();//empty
+                    String vehicleName = sc.nextLine();
+                    System.out.println();
+                    String sqlSearchByName = "select v.vehicle_id,v.vehicle_name,v.Number_plate,t.type_name,t.security_deposit,v.rent,v.total_distance,v.serviced,v.borrower_id,v.rented_date,v.return_date from vehicles_info v inner join type_info t on v.type_id = t.type_id where vehicle_name = '"+vehicleName+"' and isdeleted = 'N' and t.type_id = "+type+" order by v.vehicle_id";
+                    vehiclesList(sqlSearchByName);
+    
+                }
+                else if(select == 2){
+    
+                    clearScr();
+                    System.out.println();
+                    System.out.print("    Enter the Number Plate of the Vehicle to search : ");
+                    sc.nextLine();//empty
+                    String vehicleNumberPlate = sc.nextLine();
+                    System.out.println(); 
+                    String sqlSearchByNumberPlate = "select v.vehicle_id,v.vehicle_name,v.Number_plate,t.type_name,t.security_deposit,v.rent,v.total_distance,v.serviced,v.borrower_id,v.rented_date,v.return_date from vehicles_info v inner join type_info t on v.type_id = t.type_id where Number_plate = '"+vehicleNumberPlate+"' and isdeleted = 'N' and t.type_id = "+type;
+                    vehiclesList(sqlSearchByNumberPlate);
+    
+                }
+                else {
+                    System.out.print("    Invalid Choice ! Press Enter ");
+                    sc.nextLine();
+                    sc.nextLine();
+                }   
+            }
+            else {
+                System.out.println();
+                System.out.print("    Invalid Choice ! Press Enter ");
+                sc.nextLine();
+                sc.nextLine();
+                Main.clearScr();
+            }
         }
         else if(choice == 6){
-            clearScr();
-            System.out.println();
-            System.out.print("    Enter the Number Plate of the Vehicle to search : ");
-            sc.nextLine();//empty
-            String vehicleNumberPlate = sc.nextLine();
-            System.out.println(); 
-            String sqlSearchByNumberPlate = "select v.vehicle_id,v.vehicle_name,v.Number_plate,t.type_name,t.security_deposit,v.rent,v.total_distance,v.serviced,v.borrower_id,v.rented_date,v.return_date from vehicles_info v inner join type_info t on v.type_id = t.type_id where Number_plate = '"+vehicleNumberPlate+"' and isdeleted = 'N'";
-            vehiclesList(sqlSearchByNumberPlate);
+            try {
+                ResultSet orderedByRent = statement.executeQuery("select * from vehicles_info order by rent");
+                Borrower.displayTable(orderedByRent);
+            } catch (Exception e) {
+                System.out.println(e);
+            }
         }
         else if(choice == 7) {
             clearScr();
-            boolean flag = true;
-            System.out.println();
-            System.out.println("    Rented Vehicles");
-            while(flag){
+            boolean marker = true;
+            while(marker){
                 System.out.println();
-                System.out.println("    1. View List");
-                System.out.println("    2. Calculate Fine");
-                System.out.println("    3. Exit");
+                System.out.println("    Rented Vehicles");
+                System.out.println();
+                System.out.println("    1. Previously Rented");
+                System.out.println("    2. Currently Rented");
+                System.out.println("    3. Not Rented");
+                System.out.println("    4. Exit");
                 System.out.println();
                 System.out.print("    Enter the choice(1/2/3) : ");
-                int choiceRent = sc.nextInt();
-                if(choiceRent == 1){
+                int status = sc.nextInt();
+                if(status == 1){
                     clearScr();
-                    displayRentedVehicles();
-                }
-                else if(choiceRent == 2){
-                    // get rented_returned value for given vehicle id
-                    // if rented_returned = 0 => display vehicle not yet returned ipo
-                    // if rented_returned = 1 calculate fine ok
-                    clearScr();
-                    System.out.println();
-                    System.out.print("    Enter the vehicle ID : ");
-                    int vehicle_id = sc.nextInt();
-                    System.out.println();
-                    boolean mark = false;
                     try {
-                        ResultSet set = statement.executeQuery("select * from rented_vehicles where vehicle_id = "+ vehicle_id);
-                        if(set.next()){
-                            mark = true;
-                        }
-    
-                    } catch (Exception e) {
-                        System.out.println(e);
-                    }
-                    if(mark) {
-                        System.out.println("    Enter the Damage Level ");
-                        System.out.println();
-                        System.out.println("    0 for no damage");
-                        System.out.println("    1 for low damage");
-                        System.out.println("    2 for medium damage");
-                        System.out.println("    3 for high damage");
-                        System.out.println();
-                        System.out.print("    Enter (0/1/2/3) : ");
-                        int dlevel = sc.nextInt();
-                        System.out.println();
-                        System.out.print("    Enter the distance travelled during the period of rent : ");
-                        int dtravelled = sc.nextInt();
-                        try {
-                            statement.execute("update rented_vehicles set damage_level = "+dlevel+" , travelled_distance = "+dtravelled+" , rented_returned = 2 where vehicle_id = "+vehicle_id+" and rented_returned = 1");
-                            displayRentedVehicles();
+                        ResultSet set = statement.executeQuery("select vehicle_id,Vehicle_name from vehicles_info where vehicle_id in(select distinct vehicle_id from rented_vehicles where rented_returned = 3 ) order by vehicle_id");
+                        if(!Borrower.displayTable(set)){
                             System.out.println();
-                            System.out.println("    Successfully updated !! Press Enter..");
-                        } catch (Exception e) {
-                            System.out.println(e);
+                            System.out.print("    No vehicles have been rented Previously. Press Enter ");
+                            sc.nextLine();
+                            sc.nextLine();
+                            System.out.println();
                         }
-                        System.out.println();
-                    }
-                    else{
-                        System.out.print("    Vehicle not found !! Press Enter ");
+                        System.out.print("    Press Enter to exit ");
                         sc.nextLine();
                         sc.nextLine();
                         clearScr();
+                    } catch (Exception e) {
+                        System.out.println(e);
                     }
                 }
-                else if(choiceRent == 3){
+                else if(status == 2){
+                    boolean flag = true;
+                    while(flag){
+                        Main.clearScr();
+                        System.out.println();
+                        System.out.println("    1. View List");
+                        System.out.println("    2. Calculate Fine");
+                        System.out.println("    3. Exit");
+                        System.out.println();
+                        System.out.print("    Enter the choice(1/2/3) : ");
+                        int choiceRent = sc.nextInt();
+                        if(choiceRent == 1){
+                            clearScr();
+                            try {
+                                ResultSet set = statement.executeQuery("select vehicle_id,Vehicle_name from vehicles_info where vehicle_id in(select distinct vehicle_id from rented_vehicles where rented_returned != 3 ) order by vehicle_id");
+                                if(!Borrower.displayTable(set)){
+                                    System.out.println();
+                                    System.out.print("    No vehicles have been rented currently ");
+                                    sc.nextLine();
+                                    sc.nextLine();
+                                }
+                                System.out.println();
+                                System.out.print("    Press Enter to exit ");
+                                sc.nextLine();
+                                sc.nextLine();
+                                clearScr();
+                            } catch (Exception e) {
+                                System.out.println(e);
+                            }
+                        }
+                        else if(choiceRent == 2){
+                            // get rented_returned value for given vehicle id
+                            // if rented_returned = 0 => display vehicle not yet returned ipo
+                            // if rented_returned = 1 calculate fine ok
+                            clearScr();
+                            System.out.println();
+                            System.out.print("    Enter the vehicle ID : ");
+                            int vehicle_id = sc.nextInt();
+                            System.out.println();
+                            boolean mark = false;
+                            try {
+                                ResultSet set = statement.executeQuery("select * from rented_vehicles where vehicle_id = "+vehicle_id+" and rented_returned != 3");
+                                if(set.next()){
+                                    mark = true;
+                                }
+            
+                            } catch (Exception e) {
+                                System.out.println(e);
+                            }
+                            if(mark) {
+                                System.out.println("    Enter the Damage Level ");
+                                System.out.println();
+                                System.out.println("    0 for no damage");
+                                System.out.println("    1 for low damage");
+                                System.out.println("    2 for medium damage");
+                                System.out.println("    3 for high damage");
+                                System.out.println();
+                                System.out.print("    Enter (0/1/2/3) : ");
+                                int dlevel = sc.nextInt();
+                                System.out.println();
+                                System.out.print("    Enter the distance travelled during the period of rent : ");
+                                int dtravelled = sc.nextInt();
+                                try {
+                                    statement.execute("update rented_vehicles set damage_level = "+dlevel+" , travelled_distance = "+dtravelled+" , rented_returned = 2 where vehicle_id = "+vehicle_id+" and rented_returned = 1");
+                                    displayRentedVehicles();
+                                    System.out.println();
+                                    System.out.println("    Successfully updated !! Press Enter..");
+                                    sc.nextLine();
+                                    sc.nextLine();
+                                } catch (Exception e) {
+                                    System.out.println(e);
+                                }
+                                System.out.println();
+                            }
+                            else{
+                                System.out.print("    Vehicle not found !! Press Enter ");
+                                sc.nextLine();
+                                sc.nextLine();
+                                clearScr();
+                            }
+                        }
+                        else if(choiceRent == 3){
+                            clearScr();
+                            System.out.println();
+                            flag = false;
+                        }
+                    }
+    
+                }
+                else if(status == 3){
                     clearScr();
-                    System.out.println();
-                    flag = false;
+                    try {
+                        ResultSet set = statement.executeQuery("select vehicle_id,Vehicle_name from vehicles_info  where vehicle_id not in (select vehicle_id from rented_vehicles) order by vehicle_id");
+                        if(!Borrower.displayTable(set)){
+                            System.out.println();
+                            System.out.print("    All vehicles have been rented. Press Enter ");
+                            sc.nextLine();
+                            sc.nextLine();
+                        }
+                        System.out.println();
+                        System.out.print("    Press Enter to exit ");
+                        sc.nextLine();
+                        sc.nextLine();
+
+
+                        clearScr();
+                    } catch (Exception e) {
+                        System.out.println(e);
+                    }
+                }
+                else if(status == 4){
+                    clearScr();
+                    marker = false;
+                }
+                else {
+                    System.out.print("    Invalid Choice! Press Enter ");
+                    sc.nextLine();
+                    sc.nextLine();
+                    clearScr();
                 }
 
             }

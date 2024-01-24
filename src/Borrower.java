@@ -837,7 +837,7 @@ public class Borrower {
 
             ResultSet set = statement.executeQuery("select v.vehicle_id,v.vehicle_name,v.Number_plate,t.type_name,t.security_deposit,v.rent from vehicles_info v inner join type_info t on v.type_id = t.type_id where v.isdeleted = 'N' and (v.rented_date is null and serviced = 'Yes') order by v.vehicle_id;");
 
-            displayTable(set);
+            // displayTable(set);
 
             System.out.println("+------------+------------------------+--------------+-----------+------------------+------+");
 
