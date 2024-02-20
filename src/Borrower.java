@@ -872,7 +872,7 @@ public class Borrower {
     public static boolean displayTable(ResultSet resultSet) throws SQLException{
 
         if (resultSet == null) {
-            System.out.println("resultSet == null");
+            // System.out.println("resultSet == null");
             return false;
         }
         if (!resultSet.isBeforeFirst()) {
